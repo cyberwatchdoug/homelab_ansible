@@ -1,0 +1,41 @@
+- name: Bootstrap hosts with ansible_user
+  hosts: all
+  become: false
+  remote_user: root
+
+  tasks:
+    - name: Ensure ansible_user exists
+      shell: |
+        id ansible_user || useradd -m -s /bin/bash ansible_user
+      args:
+        executable: /bin/bash
+
+    - name: Add ansible_user to wheel group
+      user:
+        name: ansible_user
+        groups: wheel
+        append: yes
+
+    - name: Create .ssh directory for ansible_user
+      file:
+        path: /home/ansible_user/.ssh
+        state: directory
+        owner: ansible_user
+        group: ansible_user
+        mode: '0700'
+
+    - name: Copy ansible_user public key
+      copy:
+        src: ~/.ssh/id_ed25519.pub
+        dest: /home/ansible_user/.ssh/authorized_keys
+        owner: ansible_user
+        group: ansible_user
+        mode: '0600'
+
+    - name: Allow ansible_user passwordless sudo
+      copy:
+        dest: /etc/sudoers.d/ansible_user
+        content: "ansible_user ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: '0440'
