@@ -10,11 +10,19 @@
       args:
         executable: /bin/bash
 
-    - name: Add ansible_user to wheel group
+    - name: Add ansible_user to wheel group (Debian only)
+      user:
+        name: ansible_user
+        groups: sudo
+        append: yes
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Add ansible_user to wheel group (RedHat only)
       user:
         name: ansible_user
         groups: wheel
         append: yes
+      when: ansible_facts['os_family'] == "RedHat"
 
     - name: Create .ssh directory for ansible_user
       file:
