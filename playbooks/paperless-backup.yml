@@ -1,6 +1,7 @@
 - name: Backup Paperless-NGX and copy to OMV SMB share
   hosts: paperless
   become: true
+  remote_user: ansible_user
   vars:
     backup_dir: /tmp/paperless_backups
     backup_file: "{{ backup_dir }}/paperless-backup-{{ ansible_date_time.iso8601_basic_short }}.zip"
