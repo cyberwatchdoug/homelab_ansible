@@ -1,0 +1,85 @@
+- name: Backup Paperless-NGX and copy to OMV SMB share
+  hosts: paperless
+  become: true
+  vars:
+    backup_dir: /tmp/paperless_backups
+    backup_file: "{{ backup_dir }}/paperless-backup-{{ ansible_date_time.iso8601_basic_short }}.zip"
+    smb_mount: /mnt/omv_backup
+    smb_share: "//omv_host/backup_share"
+  # smb_user and smb_pass are now loaded from vault
+
+  tasks:
+    - name: Ensure cifs-utils is installed (Debian/Ubuntu)
+      apt:
+        name: cifs-utils
+        state: present
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Ensure cifs-utils is installed (RedHat/CentOS/Fedora)
+      dnf:
+        name: cifs-utils
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Ensure gpg is installed (Debian/Ubuntu)
+      apt:
+        name: gnupg
+        state: present
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Ensure gpg is installed (RedHat/CentOS/Fedora)
+      dnf:
+        name: gnupg2
+        state: present
+      when: ansible_facts['os_family']
+
+    - name: Ensure backup directory exists
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Run Paperless-NGX backup
+      command: >
+        python3 manage.py document_exporter {{ backup_dir }} -z --no-progress-bar
+      args:
+        chdir: /opt/paperless/src
+        creates: "{{ backup_file }}"
+
+    - name: Encrypt the Paperless-NGX backup zip file with GPG and password
+      command: >
+        gpg --batch --yes --passphrase "{{ backup_zip_pass }}" -c "{{ backup_file }}"
+      args:
+        chdir: "{{ backup_dir }}"
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Ensure SMB mount directory exists
+      file:
+        path: "{{ smb_mount }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if SMB share is already mounted
+      shell: mount | grep "{{ smb_mount }}"
+      register: smb_mounted
+      ignore_errors: true
+
+    - name: Mount SMB share if not mounted
+      mount:
+        path: "{{ smb_mount }}"
+        src: "{{ smb_share }}"
+        fstype: cifs
+        opts: "username={{ smb_user }},password={{ smb_pass }},rw"
+        state: mounted
+      when: smb_mounted.rc != 0
+
+    - name: Copy backup to SMB share
+      copy:
+        src: "{{ backup_file }}"
+        dest: "{{ smb_mount }}/"
+        remote_src: yes
+
+    - name: Unmount SMB share
+      mount:
+        path: "{{ smb_mount }}"
+        state: unmounted
