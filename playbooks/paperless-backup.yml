@@ -8,8 +8,12 @@
     smb_mount: /mnt/omv_backup
     smb_share: "//omv_host/backup_share"
   # smb_user and smb_pass are now loaded from vault
+  # backup_zip_pass is also loaded from vault
 
   tasks:
+    -name: Load vault variables
+      include_vars: inventories/group_vars/paperless/paperless_vault.yml
+
     - name: Ensure cifs-utils is installed (Debian/Ubuntu)
       apt:
         name: cifs-utils
