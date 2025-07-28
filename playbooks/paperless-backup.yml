@@ -51,7 +51,6 @@
         gpg --batch --yes --passphrase "{{ backup_zip_pass }}" -c "{{ backup_file }}"
       args:
         chdir: "{{ backup_dir }}"
-      when: ansible_facts['os_family'] == "Debian"
 
     - name: Ensure SMB mount directory exists
       file:
