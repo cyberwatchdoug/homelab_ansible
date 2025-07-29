@@ -70,6 +70,7 @@
       failed_when: false
 
     - name: Mount SMB share if not mounted
+      become: true
       mount:
         path: "{{ smb_mount }}"
         src: "{{ smb_share }}"
