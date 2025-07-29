@@ -12,7 +12,7 @@
 
   tasks:
     - name: Load vault variables
-      include_vars: inventories/group_vars/paperless/paperless_vault.yml
+      include_vars: ../inventories/group_vars/paperless/paperless_vault.yml
 
     - name: Ensure cifs-utils is installed (Debian/Ubuntu)
       apt:
