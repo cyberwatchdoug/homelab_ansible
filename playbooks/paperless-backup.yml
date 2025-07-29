@@ -71,7 +71,7 @@
 
     - name: Copy backup to SMB share using smbclient
       command: >
-        smbclient "{{ smb_share }}" -U "{{ smb_user }}%{{ smb_pass }}" -c "mkdir paperless-backup; put {{ backup_file }}.gpg paperless-backup/{{ backup_file | basename }}.gpg"
+        smbclient "{{ smb_share }}" -U "{{ smb_user }}%{{ smb_pass }}" -c "mkdir paperless-backup; put {{ backup_file }}.gpg paperless-backup/{{ backup_file | basename }}.zip.gpg"
       args:
         chdir: "{{ backup_dir }}"
       no_log: true
