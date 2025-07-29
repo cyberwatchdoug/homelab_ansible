@@ -57,28 +57,6 @@
       args:
         chdir: "{{ backup_dir }}"
 
-    - name: Ensure SMB mount directory exists
-      file:
-        path: "{{ smb_mount }}"
-        state: directory
-        mode: '0755'
-
-    - name: Check if SMB share is already mounted
-      command: grep "{{ smb_mount }}" /proc/mounts
-      register: smb_mounted
-      changed_when: false
-      failed_when: false
-
-    - name: Mount SMB share if not mounted
-      become: true
-      mount:
-        path: "{{ smb_mount }}"
-        src: "{{ smb_share }}"
-        fstype: cifs
-        opts: "username={{ smb_user }},password={{ smb_pass }},rw,vers=3.0"
-        state: mounted
-      when: smb_mounted.rc != 0
-
     - name: Ensure smbclient is installed (Debian/Ubuntu)
       apt:
         name: smbclient
@@ -93,11 +71,7 @@
 
     - name: Copy backup to SMB share using smbclient
       command: >
-        smbclient "{{ smb_share }}" -U "{{ smb_user }}%{{ smb_pass }}" -c "mkdir paperless-backup; put {{ backup_file }} paperless-backup/{{ backup_file | basename }}"
+        smbclient "{{ smb_share }}" -U "{{ smb_user }}%{{ smb_pass }}" -c "mkdir paperless-backup; put {{ backup_file }}.gpg paperless-backup/{{ backup_file | basename }}.gpg"
       args:
         chdir: "{{ backup_dir }}"
-
-    - name: Unmount SMB share
-      mount:
-        path: "{{ smb_mount }}"
-        state: unmounted
+      no_log: true
