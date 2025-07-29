@@ -6,7 +6,7 @@
     backup_dir: /tmp/paperless_backups
     backup_file: "{{ backup_dir }}/paperless-backup-{{ ansible_date_time.iso8601_basic_short }}"
     smb_mount: /mnt/omv_backup
-    smb_share: "//omv_host/backup_share"
+    smb_share: "//omv_data"
   # smb_user and smb_pass are now loaded from vault
   # backup_zip_pass is also loaded from vault
 
@@ -80,7 +80,7 @@
     - name: Copy backup to SMB share
       copy:
         src: "{{ backup_file }}"
-        dest: "{{ smb_mount }}/"
+        dest: "{{ smb_mount }}/paperless-backup/"
         remote_src: yes
 
     - name: Unmount SMB share
