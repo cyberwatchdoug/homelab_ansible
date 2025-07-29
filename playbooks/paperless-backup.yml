@@ -64,9 +64,10 @@
         mode: '0755'
 
     - name: Check if SMB share is already mounted
-      shell: mount | grep "{{ smb_mount }}"
+      command: grep "{{ smb_mount }}" /proc/mounts
       register: smb_mounted
-      ignore_errors: true
+      changed_when: false
+      failed_when: false
 
     - name: Mount SMB share if not mounted
       mount:
