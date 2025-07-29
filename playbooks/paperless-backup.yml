@@ -46,7 +46,7 @@
 
     - name: Run Paperless-NGX backup
       command: >
-        python3 manage.py document_exporter {{ backup_dir }} -z --no-progress-bar
+        python3 manage.py document_exporter {{ backup_dir }} -z --no-progress-bar -zn {{ backup_file }}
       args:
         chdir: /opt/paperless/src
         creates: "{{ backup_file }}"
