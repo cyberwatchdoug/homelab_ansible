@@ -6,7 +6,7 @@
     backup_dir: /tmp/paperless_backups
     backup_file: "{{ backup_dir }}/paperless-backup-{{ ansible_date_time.date }}"
     smb_mount: /mnt/omv_backup
-    smb_share: "//10.0.0.178"
+    smb_share: "//10.0.0.178/omv_data"
   # smb_user and smb_pass are now loaded from vault
   # backup_zip_pass is also loaded from vault
 
@@ -74,7 +74,7 @@
         path: "{{ smb_mount }}"
         src: "{{ smb_share }}"
         fstype: cifs
-        opts: "username={{ smb_user }},password={{ smb_pass }},rw"
+        opts: "username={{ smb_user }},password={{ smb_pass }},rw,vers=3.0"
         state: mounted
       when: smb_mounted.rc != 0
 
