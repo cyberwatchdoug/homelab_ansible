@@ -11,7 +11,7 @@
   # backup_zip_pass is also loaded from vault
 
   tasks:
-    -name: Load vault variables
+    - name: Load vault variables
       include_vars: inventories/group_vars/paperless/paperless_vault.yml
 
     - name: Ensure cifs-utils is installed (Debian/Ubuntu)
