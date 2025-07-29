@@ -74,4 +74,11 @@
         smbclient "{{ smb_share }}" -U "{{ smb_user }}%{{ smb_pass }}" -c "mkdir paperless-backup; put {{ backup_file }}.zip.gpg paperless-backup/{{ backup_file | basename }}.zip.gpg"
       args:
         chdir: "{{ backup_dir }}"
+      register: smbclient_result
       #no_log: true
+
+    - name: Remove all files in backup_dir if backup was successful
+      file:
+        path: "{{ backup_dir }}"
+        state: absent
+      when: smbclient_result is succeeded
