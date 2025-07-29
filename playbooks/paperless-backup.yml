@@ -4,7 +4,7 @@
   remote_user: ansible_user
   vars:
     backup_dir: /tmp/paperless_backups
-    backup_file: "{{ backup_dir }}/paperless-backup-{{ ansible_date_time.iso8601_basic_short }}.zip"
+    backup_file: "{{ backup_dir }}/paperless-backup-{{ ansible_date_time.iso8601_basic_short }}"
     smb_mount: /mnt/omv_backup
     smb_share: "//omv_host/backup_share"
   # smb_user and smb_pass are now loaded from vault
@@ -53,7 +53,7 @@
 
     - name: Encrypt the Paperless-NGX backup zip file with GPG and password
       command: >
-        gpg --batch --yes --passphrase "{{ backup_zip_pass }}" -c "{{ backup_file }}"
+        gpg --batch --yes --passphrase "{{ backup_zip_pass }}" -c "{{ backup_file }}.zip"
       args:
         chdir: "{{ backup_dir }}"
 
