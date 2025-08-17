@@ -86,6 +86,7 @@
         checksum_algorithm: sha256
       register: remote_backup_stat
       delegate_to: omv
+      become: true
 
     - name: Calculate checksum of archive
       stat:
