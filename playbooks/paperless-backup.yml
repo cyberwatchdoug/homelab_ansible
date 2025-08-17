@@ -97,7 +97,7 @@
     - name: Assert checksums match
       assert:
         that:
-          - local_backup_stat.stat.checksum == remote_backup_stat.checksum
+          - local_backup_stat.stat.checksum == remote_backup_stat.stat.checksum
         fail_msg: "Checksum mismatch for the backup file. Local: {{ local_backup_stat.stat.checksum }}, Remote: {{ remote_backup_stat.stat.checksum }}"
 
     - name: Remove all files in backup_dir if backup was successful
