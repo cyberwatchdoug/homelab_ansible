@@ -6,7 +6,8 @@
     backup_dir: /tmp/paperless_backups
     backup_file: "{{ backup_dir }}/paperless-backup-{{ ansible_date_time.date }}"
     smb_mount: /mnt/omv_backup
-    smb_share: "//10.0.0.178/omv_data"
+    smb_share: "//omv/omv_data"
+    omv_shared_drive: /srv/dev-disk-by-uuid-54b8eb26-f303-4324-9aaf-983985e9157f/omv_data
   # smb_user and smb_pass are now loaded from vault
   # backup_zip_pass is also loaded from vault
 
@@ -81,16 +82,16 @@
     # Get checksum of the local and remote encrypted backup file
     - name: Calculate checksum of remote backup file
       stat:
-        path: "paperless-backup/{{ backup_file | basename }}.zip.gpg"
+        path: "{{ omv_shared_drive}}/paperless-backup/{{ backup_file | basename }}.zip.gpg"
         checksum_algorithm: sha256
       register: remote_backup_stat
+      delegate_to: omv
 
     - name: Calculate checksum of archive
       stat:
         path: "{{ backup_file }}.zip.gpg"
         checksum_algorithm: sha256
       register: local_backup_stat
-      delegate_to: localhost
 
     - name: Assert checksums match
       assert:
