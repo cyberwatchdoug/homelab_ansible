@@ -14,6 +14,7 @@
     - name: Load vault variables
       include_vars: ../inventories/group_vars/paperless/paperless_vault.yml
 
+    # Ensure required packages are installed
     - name: Ensure cifs-utils is installed (Debian/Ubuntu)
       apt:
         name: cifs-utils
@@ -38,6 +39,18 @@
         state: present
       when: ansible_facts['os_family'] == "RedHat"
 
+    - name: Ensure smbclient is installed (Debian/Ubuntu)
+      apt:
+        name: smbclient
+        state: present
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Ensure smbclient is installed (RedHat/CentOS/Fedora)
+      dnf:
+        name: smbclient
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
     - name: Ensure backup directory exists
       file:
         path: "{{ backup_dir }}"
@@ -57,18 +70,6 @@
       args:
         chdir: "{{ backup_dir }}"
 
-    - name: Ensure smbclient is installed (Debian/Ubuntu)
-      apt:
-        name: smbclient
-        state: present
-      when: ansible_facts['os_family'] == "Debian"
-
-    - name: Ensure smbclient is installed (RedHat/CentOS/Fedora)
-      dnf:
-        name: smbclient
-        state: present
-      when: ansible_facts['os_family'] == "RedHat"
-
     - name: Copy backup to SMB share using smbclient
       command: >
         smbclient "{{ smb_share }}" -U "{{ smb_user }}%{{ smb_pass }}" -c "mkdir paperless-backup; put {{ backup_file }}.zip.gpg paperless-backup/{{ backup_file | basename }}.zip.gpg"
@@ -76,6 +77,26 @@
         chdir: "{{ backup_dir }}"
       register: smbclient_result
       #no_log: true
+
+    # Get checksum of the local and remote encrypted backup file
+    - name: Calculate checksum of remote backup file
+      stat:
+        path: "paperless-backup/{{ backup_file | basename }}.zip.gpg"
+        checksum_algorithm: sha256
+      register: remote_backup_stat
+
+    - name: Calculate checksum of archive
+      stat:
+        path: "{{ backup_file }}.zip.gpg"
+        checksum_algorithm: sha256
+      register: local_backup_stat
+      delegate_to: localhost
+
+    - name: Assert checksums match
+      assert:
+        that:
+          - local_backup_stat.stat.checksum == remote_backup_stat.checksum
+        fail_msg: "Checksum mismatch for the backup file. Local: {{ local_backup_stat.stat.checksum }}, Remote: {{ remote_backup_stat.stat.checksum }}"
 
     - name: Remove all files in backup_dir if backup was successful
       file:
