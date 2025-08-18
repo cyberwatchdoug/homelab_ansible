@@ -1,0 +1,41 @@
+- name: Paperless Backup Cronjob to copy script and setup Cronjob
+  hosts: omv
+  remote_user: ansible_user
+  vars:
+    backup_script_path: /usr/local/bin/paperless-backup-retention.sh
+    cron_job_name: "paperless_backup_retention"
+    cron_job_schedule: "0 6 * * *"  # Daily at 6 AM
+
+  tasks:
+    - name: Copy Paperless backup retention script to remote host
+      copy:
+        src: ../scripts/paperless-backup-retention.sh
+        dest: "{{ backup_script_path }}"
+        mode: '0755'
+      become: true
+
+    - name: Ensure cron job for Paperless backup retention exists
+      cron:
+        name: "{{ cron_job_name }}"
+        minute: "{{ cron_job_schedule.split()[0] }}"
+        hour: "{{ cron_job_schedule.split()[1] }}"
+        day: "{{ cron_job_schedule.split()[2] }}"
+        month: "{{ cron_job_schedule.split()[3] }}"
+        weekday: "{{ cron_job_schedule.split()[4] }}"
+        job: "{{ backup_script_path }} >> /var/log/paperless-backup-retention.log 2>&1"
+        user: root
+      become: true
+
+    - name: Ensure logrotate config for paperless-backup-retention
+      copy:
+        dest: /etc/logrotate.d/paperless-backup-retention
+        content: |
+          /var/log/paperless-backup-retention.log {
+            monthly
+            rotate 6
+            compress
+            missingok
+            notifempty
+            create 0640 root root
+          }
+      become: true
