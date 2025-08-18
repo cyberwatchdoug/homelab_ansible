@@ -1,3 +1,4 @@
+---
 - name: Backup Paperless-NGX and copy to OMV SMB share
   hosts: paperless
   become: true

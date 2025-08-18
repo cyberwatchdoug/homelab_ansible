@@ -1,3 +1,4 @@
+---
 - name: Paperless Backup Cronjob to copy script and setup Cronjob
   hosts: omv
   remote_user: ansible_user
