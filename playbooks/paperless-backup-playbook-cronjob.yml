@@ -1,6 +1,7 @@
 ---
 - name: Setup cron job to run Paperless-NGX backup playbook daily
   hosts: localhost
+  connection: local
   vars:
     cron_job_name: "paperless_backup_playbook"
     cron_job_schedule: "0 4 * * *"  # Daily at 4 AM
