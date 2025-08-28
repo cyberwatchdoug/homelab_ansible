@@ -10,7 +10,6 @@
 
   tasks:
     - name: Ensure cron job for Paperless-NGX backup exists
-      description: "Setup cron job to run Paperless-NGX backup playbook daily"
       ansible.builtin.cron:
         name: "{{ cron_job_name }}"
         state: present
@@ -25,7 +24,6 @@
       tags: [cron, backup]
 
     - name: Ensure logrotate config for paperless-backup-playbook
-      description: "Setup logrotate for Paperless-NGX backup playbook logs"
       ansible.builtin.copy:
         dest: /etc/logrotate.d/paperless-backup-playbook
         content: |
