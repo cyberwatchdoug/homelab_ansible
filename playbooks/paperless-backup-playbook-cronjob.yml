@@ -1,0 +1,41 @@
+---
+- name: Setup cron job to run Paperless-NGX backup playbook daily
+  hosts: localhost
+  vars:
+    cron_job_name: "paperless_backup_playbook"
+    cron_job_schedule: "0 4 * * *"  # Daily at 4 AM
+    repo_path: "/home/dougr/homelab_ansible"
+    playbook_path: "playbooks/paperless-backup.yml"
+    backup_log_path: "/var/log/paperless-backup-playbook.log"
+
+  tasks:
+    - name: Ensure cron job for Paperless-NGX backup exists
+      description: "Setup cron job to run Paperless-NGX backup playbook daily"
+      ansible.builtin.cron:
+        name: "{{ cron_job_name }}"
+        state: present
+        minute: "{{ cron_job_schedule.split()[0] }}"
+        hour: "{{ cron_job_schedule.split()[1] }}"
+        day: "{{ cron_job_schedule.split()[2] }}"
+        month: "{{ cron_job_schedule.split()[3] }}"
+        weekday: "{{ cron_job_schedule.split()[4] }}"
+        job: "cd {{ repo_path }} && ansible-playbook {{ playbook_path }} >> {{ backup_log_path }} 2>&1"
+        user: root
+      become: true
+      tags: [cron, backup]
+
+    - name: Ensure logrotate config for paperless-backup-playbook
+      description: "Setup logrotate for Paperless-NGX backup playbook logs"
+      ansible.builtin.copy:
+        dest: /etc/logrotate.d/paperless-backup-playbook
+        content: |
+          {{ backup_log_path }} {
+            monthly
+            rotate 6
+            compress
+            missingok
+            notifempty
+            create 0640 root root
+          }
+      become: true
+      tags: [logrotate, backup]
