@@ -8,6 +8,7 @@
     repo_path: "/home/dougr/homelab_ansible"
     playbook_path: "playbooks/paperless-backup.yml"
     backup_log_path: "/var/log/paperless-backup-playbook.log"
+    private_key_path: "/home/dougr/.ssh/id_ed25519"  # Adjust as necessary
 
   tasks:
     - name: Ensure cron job for Paperless-NGX backup exists
@@ -19,7 +20,7 @@
         day: "{{ cron_job_schedule.split()[2] }}"
         month: "{{ cron_job_schedule.split()[3] }}"
         weekday: "{{ cron_job_schedule.split()[4] }}"
-        job: "cd {{ repo_path }} && ansible-playbook {{ playbook_path }} >> {{ backup_log_path }} 2>&1"
+        job: "cd {{ repo_path }} && ansible-playbook {{ playbook_path }} --private-key {{ private_key_path }} >> {{ backup_log_path }} 2>&1"
         user: root
       become: true
       tags: [cron, backup]
