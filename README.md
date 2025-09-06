@@ -7,7 +7,7 @@ Repository for all ansible automations for my homelab.
 ```
 .
 ├── .gitignore
-├── ansible.cfg
+├── ansible.cfg_example
 ├── LICENSE
 ├── README.md
 ├── inventories/
@@ -19,8 +19,14 @@ Repository for all ansible automations for my homelab.
 │   │       └── example-paperless_vault.yml
 │   └── host_vars/
 ├── playbooks/
-│   ├── bootstrap.yml
+│   ├── bootstrap-ansible-user.yml
+│   ├── bootstrap-k3s.yml
+│   ├── destroy-k3s.yml
+│   ├── paperless-backup-cronjob.yml
+│   ├── paperless-backup-playbook-cronjob.yml
 │   └── paperless-backup.yml
+├── scripts/
+│   └── paperless-backup-retention.sh
 ```
 
 ## Getting Started
@@ -57,19 +63,40 @@ Repository for all ansible automations for my homelab.
 4. **Running Playbooks**  
    Run playbooks with vault password prompt:
    ```sh
-   ansible-playbook playbooks/bootstrap.yml --ask-vault-pass
+   ansible-playbook playbooks/bootstrap-ansible-user.yml --ask-vault-pass
+   ansible-playbook playbooks/bootstrap-k3s.yml --ask-vault-pass
+   ansible-playbook playbooks/destroy-k3s.yml --ask-vault-pass
    ansible-playbook playbooks/paperless-backup.yml --ask-vault-pass
+   ansible-playbook playbooks/paperless-backup-cronjob.yml --ask-vault-pass
+   ansible-playbook playbooks/paperless-backup-playbook-cronjob.yml --ask-vault-pass
    ```
 
 ## Playbooks
 
-- **bootstrap.yml**  
+- **bootstrap-ansible-user.yml**  
   Sets up the `ansible_user` account on all hosts, configures SSH keys, and enables passwordless sudo.
+
+- **bootstrap-k3s.yml**  
+  Bootstraps the installation and initial configuration of k3s on Fedora Linux VMs.
+
+- **destroy-k3s.yml**  
+  Removes k3s from a Fedora Linux VM, including stopping services and cleaning up files.
 
 - **paperless-backup.yml**  
   Backs up Paperless-NGX, encrypts the backup, and copies it to an SMB share using credentials from vault files.  
   - Supports Fedora, Debian, Ubuntu, and other platforms.
   - Uses vault variables for SMB credentials and backup password.
+
+- **paperless-backup-cronjob.yml**  
+  Installs the backup retention script on the OMV server and sets up a cron job and log rotation for automated cleanup of old Paperless-NGX backups.
+
+- **paperless-backup-playbook-cronjob.yml**  
+  Sets up a cron job to run the Paperless-NGX backup playbook daily and configures log rotation for the backup logs.
+
+## Scripts
+
+- **paperless-backup-retention.sh**  
+  Bash script to remove old Paperless-NGX backup files older than a specified number of days. Used by the backup retention cron job.
 
 ## Security
 
@@ -82,4 +109,4 @@ This project is licensed under the GNU GPL v3. See [LICENSE](LICENSE) for detail
 
 ## Contributing
 
-Feel free to submit issues or pull requests for
+Feel free to submit issues or pull requests for improvements or additional features.
