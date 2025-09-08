@@ -49,6 +49,9 @@
         state: started
         enabled: yes
         daemon_reload: yes
+      when: ansible_facts.services['k3s.service'] is defined
+      failed_when: false
+      check_mode: no
 
     - name: Display k3s node token
       command: cat /var/lib/rancher/k3s/server/node-token
