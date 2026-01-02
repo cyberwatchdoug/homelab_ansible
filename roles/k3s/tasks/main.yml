@@ -1,0 +1,67 @@
+---
+# Install and configure k3s (idempotent)
+- name: Ensure required packages are installed
+  ansible.builtin.package:
+    name:
+      - curl
+      - iptables
+      - socat
+      - conntrack
+      - selinux-policy-base
+    state: present
+
+- name: Download k3s installer script
+  ansible.builtin.get_url:
+    url: "{{ k3s_install_url }}"
+    dest: "/tmp/k3s-install.sh"
+    mode: '0755'
+  register: k3s_installer
+
+- name: Run k3s installer (idempotent via creates)
+  ansible.builtin.shell: |
+    INSTALL_K3S_VERSION={{ k3s_version }} sh /tmp/k3s-install.sh
+  args:
+    creates: /usr/local/bin/k3s
+  notify: Restart k3s
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Ensure k3s service enabled and started
+  ansible.builtin.systemd:
+    name: k3s
+    state: started
+    enabled: yes
+  when: ansible_facts.services['k3s.service'] is defined
+  failed_when: false
+  check_mode: no
+
+- name: Wait for k3s API to be available on port 6443
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 6443
+    delay: 2
+    timeout: 60
+  when: ansible_facts.services['k3s.service'] is defined
+  check_mode: no
+
+- name: Read node token if present
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: node_token_raw
+  failed_when: false
+  changed_when: false
+
+- name: Show node token
+  ansible.builtin.debug:
+    msg: "Node token: {{ (node_token_raw.content | default('')) | b64decode if node_token_raw.content is defined else 'not found' }}"
+  when: node_token_raw is defined
+
+- name: Copy kubeconfig to /root/.kube/config if present
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /root/.kube/config
+    remote_src: yes
+    owner: root
+    mode: '0600'
+  ignore_errors: yes
