@@ -1,0 +1,47 @@
+---
+- name: Destroy k3s controller node on Fedora Linux VM
+  hosts: localhost
+  connection: local
+  become: yes
+
+  vars_prompt:
+    - name: confirm_destroy
+      prompt: "Are you sure you want to destroy k3s controller node? Type YES to continue"
+      private: no
+
+  pre_tasks:
+    - name: Fail if confirmation not given
+      fail:
+        msg: "Playbook execution aborted by user."
+      when: confirm_destroy != "YES"
+
+  tasks:
+    - name: Stop k3s service
+      systemd:
+        name: k3s
+        state: stopped
+      ignore_errors: yes
+
+    - name: Disable k3s service
+      systemd:
+        name: k3s
+        enabled: no
+      ignore_errors: yes
+
+    - name: Remove k3s using uninstall script
+      shell: |
+        if [ -f /usr/local/bin/k3s-uninstall.sh ]; then
+          /usr/local/bin/k3s-uninstall.sh
+        fi
+      args:
+        warn: false
+
+    - name: Remove k3s data directory
+      file:
+        path: /var/lib/rancher
+        state: absent
+
+    - name: Remove k3s binary if still present
+      file:
+        path: /usr/local/bin/k3s
+        state: absent

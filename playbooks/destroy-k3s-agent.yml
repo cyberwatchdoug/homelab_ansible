@@ -30,8 +30,8 @@
 
     - name: Remove k3s using uninstall script
       shell: |
-        if [ -f /usr/local/bin/k3s-uninstall.sh ]; then
-          /usr/local/bin/k3s-uninstall.sh
+        if [ -f /usr/local/bin/k3s-agent-uninstall.sh ]; then
+          /usr/local/bin/k3s-agent-uninstall.sh
         fi
       args:
         warn: false
