@@ -5,11 +5,20 @@ Repository for all ansible automations for my homelab.
 ## Structure
 
 ```
+````markdown
+# homelab_ansible
+
+This repository contains Ansible playbooks and roles for automating homelab tasks such as user bootstrapping, k3s deployment, and Paperless-NGX backups.
+
+## Structure
+
+```
 .
 ├── .gitignore
 ├── ansible.cfg_example
 ├── LICENSE
 ├── README.md
+├── requirements.yml
 ├── inventories/
 │   ├── hosts.yml
 │   ├── group_vars/
@@ -25,8 +34,18 @@ Repository for all ansible automations for my homelab.
 │   ├── paperless-backup-cronjob.yml
 │   ├── paperless-backup-playbook-cronjob.yml
 │   └── paperless-backup.yml
-├── scripts/
-│   └── paperless-backup-retention.sh
+├── roles/
+│   └── k3s/
+│       ├── defaults/
+│       │   └── main.yml
+│       ├── handlers/
+│       │   └── main.yml
+│       ├── meta/
+│       │   └── main.yml
+│       └── tasks/
+│           └── main.yml
+└── scripts/
+    └── paperless-backup-retention.sh
 ```
 
 ## Getting Started
@@ -39,6 +58,10 @@ Repository for all ansible automations for my homelab.
    On Ubuntu/Debian:  
    ```sh
    sudo apt install ansible
+   ```
+   Install requirements:
+   ```sh
+   ansible-galaxy collection install -r requirements.yml
    ```
 
 2. **Configure Inventory**  
@@ -73,40 +96,31 @@ Repository for all ansible automations for my homelab.
 
 ## Playbooks
 
-- **bootstrap-ansible-user.yml**  
-  Sets up the `ansible_user` account on all hosts, configures SSH keys, and enables passwordless sudo.
+- **bootstrap-ansible-user.yml** — Sets up the `ansible_user` account, SSH keys and sudo.
+- **bootstrap-k3s.yml** — Bootstraps k3s using the `roles/k3s` role (intended to run on the control node/localhost in this repo; can be adapted to inventory groups).
+- **destroy-k3s.yml** — Uninstalls k3s and cleans up files.
+- **paperless-backup.yml** — Backups Paperless-NGX and copies encrypted backups to SMB using vault-provided credentials.
+- **paperless-backup-cronjob.yml** — Installs backup retention script and cron job on OMV server.
+- **paperless-backup-playbook-cronjob.yml** — Installs a cron job to run the backup playbook daily.
 
-- **bootstrap-k3s.yml**  
-  Bootstraps the installation and initial configuration of k3s on Fedora Linux VMs.
+## Roles
 
-- **destroy-k3s.yml**  
-  Removes k3s from a Fedora Linux VM, including stopping services and cleaning up files.
+The `roles/k3s` role contains the installation and configuration logic for k3s. Keep role logic idempotent and avoid piping remote scripts directly where possible (this role stages the installer script before execution).
 
-- **paperless-backup.yml**  
-  Backs up Paperless-NGX, encrypts the backup, and copies it to an SMB share using credentials from vault files.  
-  - Supports Fedora, Debian, Ubuntu, and other platforms.
-  - Uses vault variables for SMB credentials and backup password.
+## CI and Linting
 
-- **paperless-backup-cronjob.yml**  
-  Installs the backup retention script on the OMV server and sets up a cron job and log rotation for automated cleanup of old Paperless-NGX backups.
+A GitHub Actions workflow (`.github/workflows/ansible-lint.yml`) runs `ansible-lint` on pushes and PRs. Run `ansible-lint` locally:
 
-- **paperless-backup-playbook-cronjob.yml**  
-  Sets up a cron job to run the Paperless-NGX backup playbook daily and configures log rotation for the backup logs.
+```bash
+ansible-lint
+```
 
-## Scripts
+## Notes & Recommendations
 
-- **paperless-backup-retention.sh**  
-  Bash script to remove old Paperless-NGX backup files older than a specified number of days. Used by the backup retention cron job.
-
-## Security
-
-- Vault files containing secrets are ignored by `.gitignore` (except example files).
-- Always use encrypted vault files for sensitive data.
+- Prefer roles for reusable logic and keep playbooks concise.
+- Use `ansible-galaxy` `requirements.yml` to declare collections.
+- Add `molecule` tests for role-level validation if you plan to iterate frequently.
 
 ## License
 
-This project is licensed under the GNU GPL v3. See [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Feel free to submit issues or pull requests for improvements or additional features.
+This project is licensed under the GNU GPL v3. See `LICENSE` for details.
